@@ -1,0 +1,19 @@
+Log file created at: 2023/05/06 14:24:26
+Running on machine: deepsense
+Running duration (h:mm:ss): 0:00:00
+Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+[I20230506 14:24:26.779944 12430 DeviceManager.cpp:54] DeviceManager init ...
+[I20230506 14:24:26.780506 12430 LinuxPal.cpp:21] createObPal: create LinuxPal!
+[I20230506 14:24:26.854861 12430 EnumeratorLibusb.cpp:325] queryDevicesInfo done!
+[I20230506 14:24:26.855284 12430 DeviceManager.cpp:373] Current usb device port list::
+[I20230506 14:24:26.855296 12430 DeviceManager.cpp:375]         - 2-5.4.1-6.0 | Orbbec Gemini 2 Depth Camera
+[I20230506 14:24:26.855305 12430 DeviceManager.cpp:375]         - 2-5.4.1-6.2 | Orbbec Gemini 2 IR Camera
+[I20230506 14:24:26.855316 12430 DeviceManager.cpp:375]         - 2-5.4.1-6.4 | Orbbec Gemini 2 RGB Camera
+[I20230506 14:24:26.855326 12430 DeviceManager.cpp:375]         - 2-5.4.1-6.6 | Orbbec Gemini Data Channel
+[I20230506 14:24:26.855345 12430 DeviceManager.cpp:375]         - 2-5.4.1-6.7 | Orbbec Gemini 2 IMU
+[I20230506 14:24:26.855377 12430 DeviceManager.cpp:345] Devices matched:
+[I20230506 14:24:26.855388 12430 DeviceManager.cpp:353]   - gemini2Device = 1
+[I20230506 14:24:26.855482 12430 LinuxPal.cpp:142] Create PollingDeviceWatcher!
+[I20230506 14:24:26.855510 12430 DeviceManager.cpp:99] DeviceManager init  done!
+[I20230506 14:24:26.855535 12430 DeviceManager.cpp:50] DeviceManager construct done
+[I20230506 14:24:26.855544 12430 Context.cpp:51] Context created!

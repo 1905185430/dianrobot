@@ -1,0 +1,13 @@
+Log file created at: 2023/05/17 16:06:17
+Running on machine: deepsense
+Running duration (h:mm:ss): 0:00:00
+Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+[I20230517 16:06:17.372959 13720 DeviceManager.cpp:54] DeviceManager init ...
+[I20230517 16:06:17.373472 13720 LinuxPal.cpp:21] createObPal: create LinuxPal!
+[I20230517 16:06:17.378513 13720 EnumeratorLibusb.cpp:325] queryDevicesInfo done!
+[I20230517 16:06:17.378540 13720 DeviceManager.cpp:373] Current usb device port list::
+[I20230517 16:06:17.378551 13720 DeviceManager.cpp:362] No device matched!
+[I20230517 16:06:17.378577 13720 LinuxPal.cpp:142] Create PollingDeviceWatcher!
+[I20230517 16:06:17.378588 13720 DeviceManager.cpp:99] DeviceManager init  done!
+[I20230517 16:06:17.378599 13720 DeviceManager.cpp:50] DeviceManager construct done
+[I20230517 16:06:17.378608 13720 Context.cpp:51] Context created!

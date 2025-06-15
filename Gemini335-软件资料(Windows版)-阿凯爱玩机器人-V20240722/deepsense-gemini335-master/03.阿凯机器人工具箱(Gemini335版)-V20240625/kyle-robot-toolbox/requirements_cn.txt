@@ -1,0 +1,38 @@
+# [构建工具]
+setuptools==58.2.0
+# [Python科学计算]
+# - 基于WEB的Python IDE
+jupyter
+# - 矩阵运算
+numpy
+# - 基于numpy的四元数计算库
+numpy-quaternion
+# - 科学计算库
+scipy
+# - 可视化库
+matplotlib
+# - 可视化库， 基于matplotlib
+seaborn
+# [图像处理] 
+# - OpenCV图像处理
+opencv-python
+# - OpenCV图像处理拓展包
+opencv-contrib-python
+# [深度学习 YoloV8]
+torch
+torchvision
+torchaudio
+onnx
+ultralytics
+# [点云处理]
+# - Open3D点云处理框架
+open3d
+# - TriMesh STL与OBJ文件读取
+trimesh
+# [其他]
+# - YAML配置文件解析
+PyYaml
+# - 命令行传参
+absl-py
+# - PyBind11 构建C++代码的Python Binding
+pybind11

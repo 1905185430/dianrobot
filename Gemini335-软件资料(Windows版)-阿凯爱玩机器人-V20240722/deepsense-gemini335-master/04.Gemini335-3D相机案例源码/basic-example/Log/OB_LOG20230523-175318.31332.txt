@@ -1,0 +1,14 @@
+Log file created at: 2023/05/23 17:53:18
+Running on machine: deepsense
+Running duration (h:mm:ss): 0:00:00
+Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+[I20230523 17:53:18.850545 31332 DeviceManager.cpp:54] DeviceManager init ...
+[I20230523 17:53:18.850834 31332 LinuxPal.cpp:21] createObPal: create LinuxPal!
+[I20230523 17:53:18.855075 31332 EnumeratorLibusb.cpp:325] queryDevicesInfo done!
+[E20230523 17:53:18.855110 31332 ObV4lDevice.cpp:330] Failed to open /sys/class/video4linux
+[I20230523 17:53:18.855121 31332 DeviceManager.cpp:373] Current usb device port list::
+[I20230523 17:53:18.855134 31332 DeviceManager.cpp:362] No device matched!
+[I20230523 17:53:18.855158 31332 LinuxPal.cpp:142] Create PollingDeviceWatcher!
+[I20230523 17:53:18.855166 31332 DeviceManager.cpp:99] DeviceManager init  done!
+[I20230523 17:53:18.855171 31332 DeviceManager.cpp:50] DeviceManager construct done
+[I20230523 17:53:18.855199 31332 Context.cpp:51] Context created!

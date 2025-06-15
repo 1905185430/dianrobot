@@ -1,0 +1,5 @@
+include kyle_robot_toolbox/lib/fr/windows/*
+include kyle_robot_toolbox/lib/fr/linux/*
+include kyle_robot_toolbox/lib/pyorbbecsdk/windows/*
+include kyle_robot_toolbox/lib/pyorbbecsdk/linux/*
+
