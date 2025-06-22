@@ -3,7 +3,6 @@
 - 获取手掌0号点在相机坐标系下的三维坐标
 - 支持记录手部运动轨迹
 '''
-from scipy.spatial.transform import Rotation as R
 import numpy as np
 import cv2
 import open3d as o3d
@@ -20,6 +19,7 @@ class HandDetector:
         self.camera = Gemini335()
         # 获取相机内参
         self.intrinsic = self.camera.get_intrinsic()
+        print(self.intrinsic)
         # 59
         # self.camera_to_world = np.array([
         #     [0.9995235405012892, 0.0026994478399852235, -0.03074743835064323, -28.244393511054284],
