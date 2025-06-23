@@ -5,8 +5,7 @@ transform_to_world_coordinates
 '''
 import numpy as np
 import cv2
-
-
+from scipy.spatial.transform import Rotation
 
 def Cam2World(cam2world, cam_point3d):
     """
@@ -50,8 +49,8 @@ def depth_pixel2cam_point3d(px, py, depth=None, intrinsic=None):
     else:
         raise ValueError("必须提供相机内参 intrinsic")
     # 计算相机坐标
-    x_cam = (px - cx) * z_cam / fx
-    y_cam = (py - cy) * z_cam / fy
+    x_cam = (px - cx) / fx * z_cam
+    y_cam = (py - cy) / fy * z_cam
     return [x_cam, y_cam, z_cam]
 
 
@@ -153,17 +152,8 @@ def get_rxryrz_from_R(R):
     import cv2
 
     R = np.array(R)
-    euler_angles, *_ = cv2.RQDecomp3x3(R)
-    rx, ry, rz = euler_angles
-    # 将rz限制在[-90, 90]度
-    if rz > 50:
-        rz = 50
-    elif rz < -45:
-        rz = -45
-
-    # 将ry限制在[0, 180]度
-    if ry < -30:
-        ry = 0
-    elif ry > 180:
-        ry -= 180
+    rot = Rotation.from_matrix(R)
+    euler = rot.as_euler('XYZ', degrees=True)
+    rx, ry, rz = euler
+    print("rx, ry, rz:", rx, ry, rz)
     return rx, ry, rz

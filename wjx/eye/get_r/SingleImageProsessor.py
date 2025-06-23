@@ -35,11 +35,15 @@ class SingleImageProcessor:
 
         # 相机的参数
         self.intrinsic = [[689.5, 0, 645.34], [0, 689.82, 355.85], [0, 0, 1]]
-        self.cam2world = [[-0.9901652346580831, 0.013433445840222654, 0.13925642034520688, -27.163789618795875], 
-                          [0.006592239752229778, 0.9987537537350062, -0.049472030232080154, -593.2150728299232], 
-                          [-0.13974745239020378, -0.048067472713806535, -0.9890198014283411, 834.0095420825568], 
-                          [0.0, 0.0, 0.0, 1.0]]
+        # self.cam2world = [[-0.9901652346580831, 0.013433445840222654, 0.13925642034520688, -27.163789618795875], 
+        #                   [0.006592239752229778, 0.9987537537350062, -0.049472030232080154, -593.2150728299232], 
+        #                   [-0.13974745239020378, -0.048067472713806535, -0.9890198014283411, 834.0095420825568], 
+        #                   [0.0, 0.0, 0.0, 1.0]]
         
+        self.cam2world = [[-0.08179040668225812, 0.08403745746040085, 0.9931002140359966, -390.0579804021143], 
+                          [0.06515666431556531, 0.9947579370642825, -0.07881152036905045, -562.9389578523518], 
+                          [-0.9945174400029493, 0.058261070975427785, -0.08683725662857267, 414.30145543218623], 
+                          [0.0, 0.0, 0.0, 1.0]]
         # 拟合3D点集的平面ax+by+cz+d=0
         # 点0到8的拟合平面
         self.plane = [None] * 4  # 平面方程参数 (a, b, c, d)
@@ -170,7 +174,7 @@ class SingleImageProcessor:
     
 
 
-    def get_hand_point(self, index, roi_size=10):
+    def get_hand_point(self, index, roi_size=15):
         '''获取指定手部关键点，支持在像素范围内取深度均值'''
         if self.results is None:
             raise ValueError("请先调用 images_to_results() 方法获取处理结果")
@@ -393,8 +397,8 @@ class SingleImageProcessor:
 
 
     def run(self):
-        rgb_image_path = "/home/xuan/dianrobot/test.png"
-        depth_image_path = "/home/xuan/dianrobot/test_depth.png"
+        rgb_image_path = "/home/xuan/dianrobot/wjx/eye/get_r/imgs/test.png"
+        depth_image_path = "/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_depth.png"
         self.load_images(rgb_image_path, depth_image_path)
         self.images_to_results()
         self.update_all_axes()
@@ -408,14 +412,14 @@ class SingleImageProcessor:
 if __name__ == "__main__":
     # 示例用法
     processor = SingleImageProcessor()
-    rgb_image_path = "/home/xuan/dianrobot/test.png"
-    depth_image_path = "/home/xuan/dianrobot/test_depth.png"
-    processor.load_images(rgb_image_path, depth_image_path)
-    processor.images_to_results()
-    processor.draw_and_show_hand_landmarks()
-    processor.update_all_axes()
-    processor.get_tool2world_transformation()
-    processor.draw_workpiece_axes_on_image(axis_length=50, show=True, window_name="Workpiece Axes")
-    processor.get_rxryrz_from_rotation_matrix()
-    processor.update_gripper_position()
-    # processor.run()
+    # rgb_image_path = "/home/xuan/dianrobot/test.png"
+    # depth_image_path = "/home/xuan/dianrobot/test_depth.png"
+    # processor.load_images(rgb_image_path, depth_image_path)
+    # processor.images_to_results()
+    # processor.draw_and_show_hand_landmarks()
+    # processor.update_all_axes()
+    # processor.get_tool2world_transformation()
+    # processor.draw_workpiece_axes_on_image(axis_length=50, show=True, window_name="Workpiece Axes")
+    # processor.get_rxryrz_from_rotation_matrix()
+    # processor.update_gripper_position()
+    processor.run()
