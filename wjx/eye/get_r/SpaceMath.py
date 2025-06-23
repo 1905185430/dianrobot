@@ -27,7 +27,7 @@ def Cam2World(cam2world, cam_point3d):
     return world_point_homogeneous.tolist()
 
 
-def depth_pixel2cam_point3d(px, py, depth_image=None, intrinsic=None):
+def depth_pixel2cam_point3d(px, py, depth=None, intrinsic=None):
     """
     深度像素坐标(px, py)转换为相机坐标系下的三维坐标[x, y, z]
     参数:
@@ -39,10 +39,7 @@ def depth_pixel2cam_point3d(px, py, depth_image=None, intrinsic=None):
         [x_cam, y_cam, z_cam]: 相机坐标系下三维坐标
     """
     # 获取深度值
-    if depth_image is not None:
-        z_cam = depth_image[py, px]
-    else:
-        raise ValueError("必须提供 depth_image ")
+    z_cam = depth
     # 获取内参
     if intrinsic is not None:
         intrinsic = np.array(intrinsic)

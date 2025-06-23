@@ -33,12 +33,13 @@ def add_path_pyorbbecsdk():
         # Ubuntu操作系统(Linux)
         pyorbbecsdk_path = os.path.join('lib', 'pyorbbecsdk', 'linux')
     sys.path.append(pyorbbecsdk_path)
+    sys.path.append("/home/xuan/anaconda3/envs/camera/lib/python3.10/site-packages/kyle_robot_toolbox/lib/pyorbbecsdk/linux")
+
 
 # 将pyorbbecsdk添加到动态链接库
 add_path_pyorbbecsdk()
 # 导入pyorbbecsdk
 from pyorbbecsdk import *
-from pyorbbecsdk import OBFormat
 
 def connect_device(serial_num=None):
     '''连接设备'''

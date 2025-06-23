@@ -29,6 +29,10 @@ class SingleImageProcessor:
             min_detection_confidence=0.5
         )
 
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.mp_drawing_styles = mp.solutions.drawing_styles
+
+
         # 相机的参数
         self.intrinsic = [[689.5, 0, 645.34], [0, 689.82, 355.85], [0, 0, 1]]
         self.cam2world = [[-0.9901652346580831, 0.013433445840222654, 0.13925642034520688, -27.163789618795875], 
@@ -166,25 +170,35 @@ class SingleImageProcessor:
     
 
 
-    def get_hand_point(self, index):
-        '''获取指定手部关键点'''
+    def get_hand_point(self, index, roi_size=10):
+        '''获取指定手部关键点，支持在像素范围内取深度均值'''
         if self.results is None:
             raise ValueError("请先调用 images_to_results() 方法获取处理结果")
         if index < 0 or index >= len(self.hand_points):
             raise ValueError(f"索引 {index} 超出范围，必须在 0 到 {len(self.hand_points) - 1} 之间")
         if self.results.multi_hand_landmarks is not None:
             pixel_landmark = self.results.multi_hand_landmarks[0].landmark
-            # 获取关键点的像素坐标
             lm = pixel_landmark[index]
             img_width, img_height = self.depth_image.shape[1], self.depth_image.shape[0]
             px = int(lm.x * img_width)
             py = int(lm.y * img_height)
 
-            # 获取深度值
             if self.depth_image is not None:
-                cam_point3d = Spmath.depth_pixel2cam_point3d(px, py, self.depth_image, self.intrinsic)
-                # 转换到世界坐标系
+                half = roi_size // 2
+                x1 = max(px - half, 0)
+                x2 = min(px + half + 1, img_width)
+                y1 = max(py - half, 0)
+                y2 = min(py + half + 1, img_height)
+                roi = self.depth_image[y1:y2, x1:x2]
+                valid = roi[roi > 0]
+                if valid.size == 0:
+                    print("[WARN] ROI 区域无有效深度值")
+                    return None
+                depth_mean = np.mean(valid)
+                cam_point3d = Spmath.depth_pixel2cam_point3d(px, py, depth_mean, self.intrinsic)
                 world_point = Spmath.Cam2World(self.cam2world, cam_point3d)
+                self.hand_points[index] = world_point
+                print(f"点 {index} 的世界坐标: {world_point}")
                 return world_point
             else:
                 print("[WARN] ROI 区域无有效深度值")
@@ -197,26 +211,13 @@ class SingleImageProcessor:
         '''更新所有手部关键点'''
         if self.results is None:
             raise ValueError("请先调用 images_to_results() 方法获取处理结果")
-        if self.results.multi_hand_landmarks is not None:
-            pixel_landmark = self.results.multi_hand_landmarks[0].landmark
-            img_width, img_height = self.depth_image.shape[1], self.depth_image.shape[0]
-            for i in range(len(self.hand_points)):
-                lm = pixel_landmark[i]
-                px = int(lm.x * img_width)
-                py = int(lm.y * img_height)
-
-                # 获取深度值
-                if self.depth_image is not None:
-                    cam_point3d = Spmath.depth_pixel2cam_point3d(px, py, self.depth_image, self.intrinsic)
-                    # 转换到世界坐标系
-                    world_point = Spmath.Cam2World(self.cam2world, cam_point3d)
-                    self.hand_points[i] = world_point
-                else:
-                    print("[WARN] ROI 区域无有效深度值")
-                    self.hand_points[i] = None
-        else:
+        if self.results.multi_hand_landmarks is None:
             print("[INFO] 未检测到手部关键点")
-            self.hand_points = [None] * len(self.hand_points)
+            return
+        # 获取第一个手的关键点
+        for i in range(len(self.hand_points)):  
+            self.get_hand_point(i)
+            
 
 
     def get_4_to_8_vector(self):
@@ -226,8 +227,12 @@ class SingleImageProcessor:
             return None
         p4 = np.array(self.hand_points[4])
         p8 = np.array(self.hand_points[8])
+        print(f"点4的世界坐标: {p4}")
+        print(f"点8的世界坐标: {p8}")
         vector = p4 - p8
+        print(f"点4到点8的向量: {vector}")
         vector = vector / np.linalg.norm(vector)  # 单位化向量
+        print(f"单位化后的向量: {vector}")
         vector = Spmath.project_vector_on_plane(self.plane, vector) # 投影到平面上
         self.vector_4_to_8 = vector
         self.x_axis = vector  # 将x轴设置为点4到点8的向量
@@ -242,6 +247,7 @@ class SingleImageProcessor:
         points = np.array([self.hand_points[i] for i in range(9)])
         a, b, c, d = Spmath.fit_plane(points)
         self.plane = [a, b, c, d]
+        print(f"平面方程: {a}x + {b}y + {c}z + {d} = 0")
         return self.plane
     
     def get_z_axis_vector(self):
@@ -347,6 +353,44 @@ class SingleImageProcessor:
         self.gripper_pos.append(self.rz)
         print(f"夹爪位置已更新: {self.gripper_pos}")
 
+    def draw_and_show_hand_landmarks(self):
+        '''
+        绘制手部关键点、连接线、编号，并打印每个点的世界坐标
+        '''
+        if self.rgb_image is None or self.depth_image is None:
+            print("[WARN] 图像未加载")
+            return
+        if self.results is None:
+            print("[WARN] 未检测到手部关键点")
+            return
+
+        canvas = self.rgb_image.copy()
+        img_width, img_height = self.rgb_image.shape[1], self.rgb_image.shape[0]
+        if self.results.multi_hand_landmarks:
+            for hand_landmarks in self.results.multi_hand_landmarks:
+                # 绘制关键点和连接线
+                self.mp_drawing.draw_landmarks(
+                    canvas,
+                    hand_landmarks,
+                    self.mp_hands.HAND_CONNECTIONS,
+                    self.mp_drawing_styles.get_default_hand_landmarks_style(),
+                    self.mp_drawing_styles.get_default_hand_connections_style()
+                )
+                # 绘制关键点编号
+                for idx, lm in enumerate(hand_landmarks.landmark):
+                    px = int(lm.x * img_width)
+                    py = int(lm.y * img_height)
+                    cv2.putText(canvas, str(idx), (px-10, py+10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+            
+            cv2.imshow('Hand Landmarks', canvas)
+            cv2.imwrite("hand_landmarks.png", canvas)
+            # cv2.waitKey(0)
+            # cv2.destroyWindow('Hand Landmarks')
+        else:
+            print("[INFO] 未检测到手部关键点")
+
+
 
     def run(self):
         rgb_image_path = "/home/xuan/dianrobot/test.png"
@@ -368,10 +412,10 @@ if __name__ == "__main__":
     depth_image_path = "/home/xuan/dianrobot/test_depth.png"
     processor.load_images(rgb_image_path, depth_image_path)
     processor.images_to_results()
+    processor.draw_and_show_hand_landmarks()
     processor.update_all_axes()
     processor.get_tool2world_transformation()
     processor.draw_workpiece_axes_on_image(axis_length=50, show=True, window_name="Workpiece Axes")
     processor.get_rxryrz_from_rotation_matrix()
     processor.update_gripper_position()
-    processor = SingleImageProcessor()
     # processor.run()

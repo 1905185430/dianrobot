@@ -65,7 +65,6 @@ while True:
 				py = int(mark.y * camera.img_height)
 				cv2.putText(canvas, str(i), (px-25, py+5), \
 							cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-	
 	if results.multi_hand_landmarks is not None:
 		pixel_landmark = results.multi_hand_landmarks[0].landmark
 		# 获取Landmark的像素坐标

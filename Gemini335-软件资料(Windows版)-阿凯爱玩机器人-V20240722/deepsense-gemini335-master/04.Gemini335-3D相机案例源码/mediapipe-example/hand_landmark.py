@@ -58,17 +58,9 @@ while True:
 				py = int(mark.y * camera.img_height)
 				cv2.putText(canvas, str(i), (px-25, py+5), \
 							cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-		cv2.imshow('Hands', canvas)
+
 	
-		
-	
-	
-		print('检测到手掌数量:', len(results.multi_hand_landmarks))
-		print('手掌关键点坐标:')
-		for hand_landmarks in results.multi_hand_landmarks:
-			for i, mark in enumerate(hand_landmarks.landmark):
-				print(f'关键点{i}: ({mark.x:.2f}, {mark.y:.2f}, {mark.z:.2f})')
-		input('按回车继续...')
+	cv2.imshow('Hands', canvas)
+	if cv2.waitKey(5) & 0xFF == 27:
 		break
-	
 camera.release()

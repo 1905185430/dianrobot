@@ -37,8 +37,8 @@ cv2.imwrite("test_depth.png", depth_img)
 #     pos = processor.gripper_pos
 # print("抓取位姿:", pos)
 # 复位
-
 pos = processor.run()
+input("复位")
 robot.MoveCart([0, -380, 200, 90, 0, 0], 0, 0, vel=20, acc=20)
 input("复现位姿")
 robot.MoveCart(pos, 0, 0, vel=20, acc=20)
