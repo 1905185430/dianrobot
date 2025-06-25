@@ -8,17 +8,35 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import SpaceMath as Spmath
+import depth_img_process as DP
+import pickle
 
 class SingleImageProcessor:
     '''单张图像处理器'''
     
     def __init__(self, image=None, depth_image=None):
         '''初始化处理器'''
+        # 图片相关
         self.rgb_image = image
         self.depth_image = depth_image
+        # 深度图和h w
+        self.depth_height = None
+        self.depth_width = None
+        # rgb图和h w
+        self.rgb_height = None
+        self.rgb_width = None
+        # 手部深度图mask
+        self.depth_mask = None
+        # 加入mask后的深度图
+        self.depth_masked_image = None
         # hand_points一共21个点
         self.hand_points = [None] * 21
         self.results = None
+
+        # 手部关键点位于相机图片内的像素坐标
+        self.hand_points_pixel = [None] * 21  # 用于存储手部关键点的像素坐标
+        # 转化到深度图的坐标
+        self.hand_points_depth2d = [None] * 21  # 用于存储手部关键点的深度坐标
 
         # 初始化 Mediapipe Hands，单图片模式
         self.mp_hands = mp.solutions.hands
@@ -26,7 +44,7 @@ class SingleImageProcessor:
             static_image_mode=True,      # 单图片模式
             max_num_hands=1,             # 最多检测1只手
             model_complexity=1,
-            min_detection_confidence=0.5
+            min_detection_confidence=0.2
         )
 
         self.mp_drawing = mp.solutions.drawing_utils
@@ -40,10 +58,10 @@ class SingleImageProcessor:
         #                   [-0.13974745239020378, -0.048067472713806535, -0.9890198014283411, 834.0095420825568], 
         #                   [0.0, 0.0, 0.0, 1.0]]
         
-        self.cam2world = [[-0.08179040668225812, 0.08403745746040085, 0.9931002140359966, -390.0579804021143], 
-                          [0.06515666431556531, 0.9947579370642825, -0.07881152036905045, -562.9389578523518], 
-                          [-0.9945174400029493, 0.058261070975427785, -0.08683725662857267, 414.30145543218623], 
-                          [0.0, 0.0, 0.0, 1.0]]
+        self.cam2world = [[-0.9921139840077686, 0.08904293829321579, 0.08821109837397782, -21.91139909478119],
+                           [0.08856900448967851, 0.9960268126638332, -0.009280080734134818, -591.1668141711527],
+                             [-0.08868694481117463, -0.001394128701131917, -0.9960585736919412, 868.9594404819674],
+                               [0.0, 0.0, 0.0, 1.0]]
         # 拟合3D点集的平面ax+by+cz+d=0
         # 点0到8的拟合平面
         self.plane = [None] * 4  # 平面方程参数 (a, b, c, d)
@@ -84,19 +102,63 @@ class SingleImageProcessor:
     def load_rgb_image(self, image_path):
         '''加载图像'''
         self.rgb_image = cv2.imread(image_path)
-        if self.rgb_image is None:
-            raise ValueError(f"无法加载图像: {image_path}")
+        if self.rgb_image is not None:
+            self.rgb_height, self.rgb_width = self.rgb_image.shape[:2]
+            print(f"加载图像成功: {image_path}, 尺寸: {self.rgb_width}x{self.rgb_height}")
+        else:
+            print(f"加载图像失败: {image_path}")
+            self.rgb_image = None
 
     def load_depth_image(self, depth_image_path):
         '''加载深度图像'''
         self.depth_image = cv2.imread(depth_image_path, cv2.IMREAD_UNCHANGED)
-        if self.depth_image is None:
-            raise ValueError(f"无法加载深度图像: {depth_image_path}")
+        if self.depth_image is not None:
+            self.depth_height, self.depth_width = self.depth_image.shape[:2]
+            print(f"加载深度图像成功: {depth_image_path}, 尺寸: {self.depth_width}x{self.depth_height}")
+        else:
+            print(f"加载深度图像失败: {depth_image_path}")
+            self.depth_image = None
         
     def load_images(self, image_path, depth_image_path):
         '''加载RGB和深度图像'''
         self.load_rgb_image(image_path)
         self.load_depth_image(depth_image_path)
+
+    def save_hand_points_pixel(self, save_path):
+        '''保存手部关键点的像素坐标到文件'''
+        if self.hand_points_pixel is None:
+            raise ValueError("请先获取手部关键点的像素坐标")
+        with open(save_path, 'wb') as f:
+            pickle.dump(self.hand_points_pixel, f)
+        print(f"手部关键点像素坐标已保存到 {save_path}")
+
+    def rgb2depth_pixel(self, pixel):
+        '''将RGB图像的像素坐标转换为深度图像的像素坐标'''
+        if self.rgb_image is None or self.depth_image is None:
+            raise ValueError("请先加载RGB和深度图像")
+        if pixel[0] < 0 or pixel[0] >= self.rgb_width or pixel[1] < 0 or pixel[1] >= self.rgb_height:
+            raise ValueError("像素坐标超出RGB图像范围")
+        x_rgb, y_rgb = pixel
+        # 计算深度图像的像素坐标
+        depth_w, depth_h = self.depth_width, self.depth_height
+        rgb_w, rgb_h = self.rgb_width, self.rgb_height
+        x_depth = int(x_rgb * depth_w / rgb_w)
+        y_depth = int(y_rgb * depth_h / rgb_h)
+        return (x_depth, y_depth)
+    
+
+
+    # mask相关
+    def draw_depth_mask(self):
+        '''
+        根据手部关键点生成深度图的mask
+        使用点0作为种子点进行区域生长
+        '''
+        points = np.array([self.hand_points_pixel[i] for i in [5]])
+        mask = DP.region_grow_by_depth(points, self.depth_image, max_diff=50)
+        cv2.imwrite("/home/xuan/dianrobot/wjx/eye/get_r/imgs/imgsdepth_mask.png", mask)
+        self.depth_mask = mask
+        self.depth_masked_image = cv2.bitwise_and(self.depth_image, self.depth_image, mask=mask)
 
     # 绘图函数
     def draw_workpiece_axes_on_image(self, axis_length=50, show=False, window_name="Workpiece Axes"):
@@ -156,7 +218,7 @@ class SingleImageProcessor:
         cv2.putText(img, 'Y', y_uv, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
         cv2.putText(img, 'Z', z_uv, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 2)
         cv2.putText(img, 'Origin', origin_uv, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 2)
-        cv2.imwrite("workpiece_axes.png", img)  # 保存图像
+        cv2.imwrite("/home/xuan/dianrobot/wjx/eye/get_r/imgs/workpiece_axes.png", img)  # 保存图像
 
         if show:
             cv2.imshow(window_name, img)
@@ -172,9 +234,20 @@ class SingleImageProcessor:
         self.results = self.hands.process(bgr_img)
         return self.results
     
+    def get_hand_points_pixel(self):
+        '''获取手部关键点的像素坐标'''
+        if self.results is None:
+            raise ValueError("请先调用 images_to_results() 方法获取处理结果")
+        if self.results.multi_hand_landmarks is not None:
+            pixel_landmark = self.results.multi_hand_landmarks[0].landmark
+            img_width, img_height = self.rgb_image.shape[1], self.rgb_image.shape[0]
+            for i, lm in enumerate(pixel_landmark):
+                px = int(lm.x * img_width)
+                py = int(lm.y * img_height)
+                self.hand_points_pixel[i] = [px, py]
 
 
-    def get_hand_point(self, index, roi_size=15):
+    def get_hand_point(self, index, roi_size=5):
         '''获取指定手部关键点，支持在像素范围内取深度均值'''
         if self.results is None:
             raise ValueError("请先调用 images_to_results() 方法获取处理结果")
@@ -188,21 +261,20 @@ class SingleImageProcessor:
             py = int(lm.y * img_height)
 
             if self.depth_image is not None:
-                half = roi_size // 2
-                x1 = max(px - half, 0)
-                x2 = min(px + half + 1, img_width)
-                y1 = max(py - half, 0)
-                y2 = min(py + half + 1, img_height)
-                roi = self.depth_image[y1:y2, x1:x2]
+                #roi = self.depth_image[y1:y2, x1:x2]
+                (px, py) ,roi = DP.find_valid_square((px, py), self.depth_masked_image, img_height, img_width, size=roi_size, step=2, min_ratio=0.8, max_iter=20)
+                print(roi)
                 valid = roi[roi > 0]
                 if valid.size == 0:
                     print("[WARN] ROI 区域无有效深度值")
                     return None
                 depth_mean = np.mean(valid)
+                #print(f"点 {index} 的深度均值: {depth_mean}")
                 cam_point3d = Spmath.depth_pixel2cam_point3d(px, py, depth_mean, self.intrinsic)
                 world_point = Spmath.Cam2World(self.cam2world, cam_point3d)
                 self.hand_points[index] = world_point
                 print(f"点 {index} 的世界坐标: {world_point}")
+                self.hand_points_pixel[index] = [px, py]  # 保存像素坐标
                 return world_point
             else:
                 print("[WARN] ROI 区域无有效深度值")
@@ -226,14 +298,14 @@ class SingleImageProcessor:
 
     def get_4_to_8_vector(self):
         '''获取点4到点8的向量在plane上的投影'''
-        if self.hand_points[4] is None or self.hand_points[8] is None:
+        if self.hand_points[3] is None or self.hand_points[6] is None:
             print("[WARN] 点4或点8的世界坐标未获取")
             return None
-        p4 = np.array(self.hand_points[4])
-        p8 = np.array(self.hand_points[8])
-        print(f"点4的世界坐标: {p4}")
-        print(f"点8的世界坐标: {p8}")
-        vector = p4 - p8
+        p3 = np.array(self.hand_points[3])
+        p6 = np.array(self.hand_points[6])
+        print(f"点4的世界坐标: {p3}")
+        print(f"点8的世界坐标: {p6}")
+        vector = p3 - p6
         print(f"点4到点8的向量: {vector}")
         vector = vector / np.linalg.norm(vector)  # 单位化向量
         print(f"单位化后的向量: {vector}")
@@ -244,11 +316,8 @@ class SingleImageProcessor:
     
     def get_from_0_to_8_plane(self):
         '''获取从点0到点8的平面方程'''
-        if any(p is None for p in self.hand_points[:9]):
-            print("[WARN] 点0到点8的世界坐标未获取")
-            return None
-        
-        points = np.array([self.hand_points[i] for i in range(9)])
+        # 选取0到9的非None作为拟合
+        points = np.array([self.hand_points[i] for i in [0, 1, 2, 5, 6, 7, 8] if self.hand_points[i] is not None])
         a, b, c, d = Spmath.fit_plane(points)
         self.plane = [a, b, c, d]
         print(f"平面方程: {a}x + {b}y + {c}z + {d} = 0")
@@ -259,9 +328,9 @@ class SingleImageProcessor:
         if self.plane is None:
             print("[WARN] 平面方程未计算")
             return None
-        a = self.vector_4_to_8
+        a = self.x_axis
         dot_0 = self.hand_points[0]
-        dot_4 = self.hand_points[4]
+        dot_4 = self.hand_points[5]
         if dot_0 is None or dot_4 is None:
             print("[WARN] 点0或点4的世界坐标未获取")
             return None
@@ -292,7 +361,6 @@ class SingleImageProcessor:
     
     def update_all_axes(self):
         '''更新所有轴向量'''
-        self.update_all_hand_points()
         self.get_from_0_to_8_plane()
         self.get_4_to_8_vector()
         self.get_z_axis_vector()
@@ -316,9 +384,9 @@ class SingleImageProcessor:
         R = np.array([self.x_axis, self.y_axis, self.z_axis]).T
         
         # 工具坐标系原点在世界坐标系中的位置
-        dot_4 = np.array(self.hand_points[4])
-        dot_8 = np.array(self.hand_points[8])
-        tool_origin = (dot_4 + dot_8) / 2  # 工具坐标系原点取点4和点8的中点
+        dot1 = np.array(self.hand_points[3])
+        dot2 = np.array(self.hand_points[6])
+        tool_origin = (dot1 + dot2) / 2  # 工具坐标系原点取点4和点8的中点
         self.origin = tool_origin.tolist()  # 保存原点位置
 
         # 工具坐标系到世界坐标系的平移向量
@@ -388,11 +456,39 @@ class SingleImageProcessor:
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
             
             cv2.imshow('Hand Landmarks', canvas)
-            cv2.imwrite("hand_landmarks.png", canvas)
+            cv2.imwrite("/home/xuan/dianrobot/wjx/eye/get_r/imgs/hand_landmarks.png", canvas)
             # cv2.waitKey(0)
             # cv2.destroyWindow('Hand Landmarks')
         else:
             print("[INFO] 未检测到手部关键点")
+
+
+    def draw_depth_mask_on_image(self):
+        '''
+        在masked_depth_image上绘制手部关键点的像素坐标（色彩可视化）
+        只绘制点0到点8的关键点
+        '''
+        points = [self.hand_points_pixel[i] for i in range(9) if self.hand_points_pixel[i] is not None]
+        if self.depth_masked_image is None:
+            print("[WARN] 深度图mask未生成")
+            return
+        # 归一化并伪彩色
+        depth = self.depth_masked_image
+        depth_norm = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX)
+        depth_norm = np.uint8(depth_norm)
+        canvas = cv2.applyColorMap(depth_norm, cv2.COLORMAP_JET)
+        for i, (px, py) in enumerate(points):
+            if px is not None and py is not None:
+                px, py = self.rgb2depth_pixel((px, py))  # 转换为深度图像的像素坐标
+                cv2.circle(canvas, (px, py), 5, (0, 255, 0), -1)
+                cv2.putText(canvas, str(i), (px + 10, py + 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        cv2.imwrite("/home/xuan/dianrobot/wjx/eye/get_r/imgs/depth_mask_with_hand_points.png", canvas)
+        # cv2.imshow("depth_mask_with_hand_points", canvas)
+        # cv2.waitKey(0)
+
+
+    
 
 
 
@@ -401,8 +497,14 @@ class SingleImageProcessor:
         depth_image_path = "/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_depth.png"
         self.load_images(rgb_image_path, depth_image_path)
         self.images_to_results()
+        self.get_hand_points_pixel()
+        self.draw_depth_mask()
+        self.draw_depth_mask_on_image()
+        self.draw_and_show_hand_landmarks()
+        self.update_all_hand_points()
         self.update_all_axes()
         self.get_tool2world_transformation()
+        # self.save_hand_points_pixel("/home/xuan/dianrobot/wjx/eye/get_r/imgs/hand_points_pixel.pkl")
         self.draw_workpiece_axes_on_image(axis_length=50, show=True, window_name="Workpiece Axes")
         self.get_rxryrz_from_rotation_matrix()
         self.update_gripper_position()

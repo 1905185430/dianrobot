@@ -153,7 +153,7 @@ def get_rxryrz_from_R(R):
 
     R = np.array(R)
     rot = Rotation.from_matrix(R)
-    euler = rot.as_euler('XYZ', degrees=True)
+    euler = rot.as_euler('xyz', degrees=True)
     rx, ry, rz = euler
     print("rx, ry, rz:", rx, ry, rz)
     return rx, ry, rz

@@ -181,6 +181,7 @@ def main(args=None):
     time.sleep(1)
     robot.MoveCart([0, -400, 200, 90, 0, 0], 0, 0, vel=20, acc=20)
     time.sleep(1)
+    input('------等待按下回车夹住标定板------')
     robot.MoveGripper(1, 100, 50, 30, 10000, 1)
     listener.destroy_node()
     rclpy.shutdown()

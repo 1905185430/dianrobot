@@ -14,7 +14,7 @@ hands = mp_hands.Hands(
     static_image_mode=True,      # 单图片模式
     max_num_hands=1,             # 最多检测2只手
     model_complexity=1,
-    min_detection_confidence=0.5
+    min_detection_confidence=0.2
 )
 
 # 绘图工具
@@ -24,8 +24,10 @@ mp_drawing_styles = mp.solutions.drawing_styles
 # 读取图片
 img_path = '/home/xuan/dianrobot/wjx/eye/get_r/imgs/test.png'
 depth_img_path = '/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_depth.png'
+mask_path = '/home/xuan/dianrobot/wjx/eye/get_r/imgs/imgsdepth_mask.png'
 image = cv2.imread(img_path)
 depth_image = cv2.imread(depth_img_path, cv2.IMREAD_UNCHANGED)
+mask_image = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
 if image is None:
     print("图片读取失败")
     exit()
@@ -126,8 +128,8 @@ def get_dot_pos_3d(results, dot_num, depth_img, intrinsic, cam2world, roi_size=5
         if len(index[0]) > 0:
             depth_value = np.mean(roi[index])
             # 将像素坐标转换为相机坐标系下的三维坐标
-            cam_point3d = depth_pixel2cam_point3d(
-                px, py, depth_value=depth_value, intrinsic=intrinsic)
+            cam_point3d = SpaceMath.depth_pixel2cam_point3d(
+                px, py, depth_value, intrinsic=intrinsic)
             cam_x, cam_y, cam_z = cam_point3d
             # 转换到世界坐标系
             world_point = transform_to_world_coordinates(cam2world, [cam_x, cam_y, cam_z])
@@ -142,6 +144,12 @@ def get_dot_pos_3d(results, dot_num, depth_img, intrinsic, cam2world, roi_size=5
 # Mediapipe 处理
 results = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 canvas = image.copy()
+#canvas = mask_image.copy()  # 使用mask_image作为画布
+# if len(mask_image.shape) == 2 or mask_image.shape[2] == 1:
+#     # 单通道转三通道
+#     canvas = cv2.cvtColor(mask_image, cv2.COLOR_GRAY2BGR)
+# else:
+#     canvas = mask_image.copy()
 img_width, img_height = image.shape[1], image.shape[0]
 
 if results.multi_hand_landmarks:
@@ -168,8 +176,12 @@ if results.multi_hand_landmarks:
             print(f"点 {i} 的世界坐标: {world_pos}")
         else:
             print(f"点 {i} 的世界坐标: 无效")
+    # 保存绘制结果
+    cv2.imwrite('/home/xuan/dianrobot/wjx/eye/get_r/imgs/hand_landmarks.png', canvas)
+    #cv2.imwrite('/home/xuan/dianrobot/wjx/eye/get_r/imgs/landmarks_onmaks.png', canvas)
     cv2.imshow('Hand Landmarks', canvas)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 else:
     print("未检测到手掌关键点")
+

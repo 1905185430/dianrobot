@@ -16,11 +16,15 @@ from fairino import Robot
 camera = Gemini335()
 processor = SingleImageProcessor()
 robot = Robot.RPC('192.168.58.6')
+input("复位")
+robot.MoveCart([0, -380, 200, 90, 0, 0], 0, 0, vel=20, acc=20)
 input("拍照")
 
 rgb_img = camera.read_color_img()
 cv2.imwrite("/home/xuan/dianrobot/wjx/eye/get_r/imgs/test.png", rgb_img)
 depth_img = camera.read_depth_img()
+# 转为np.uint16
+depth_img = depth_img.astype(np.uint16)
 cv2.imwrite("/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_depth.png", depth_img)
 # while pos is None:
 #     img = camera.read_color_img()
