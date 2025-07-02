@@ -3935,3 +3935,5 @@
 [06/15 16:17:07.328157][info][6259][DeviceManager.cpp:15] Current found device(s): (1)
 [06/15 16:17:07.328175][info][6259][DeviceManager.cpp:24] 	- Name: Orbbec Gemini 335, PID: 0x0800, SN/ID: CP1E54200015, Connection: USB3.2
 [06/15 16:17:07.328186][debug][6259][DeviceManager.cpp:52] DeviceManager construct done!
+[07/02 10:06:31.248261][error][17893][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 10:06:31.364862][error][17893][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4

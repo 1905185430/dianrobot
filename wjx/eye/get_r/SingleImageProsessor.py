@@ -57,11 +57,11 @@ class SingleImageProcessor:
         #                   [0.006592239752229778, 0.9987537537350062, -0.049472030232080154, -593.2150728299232], 
         #                   [-0.13974745239020378, -0.048067472713806535, -0.9890198014283411, 834.0095420825568], 
         #                   [0.0, 0.0, 0.0, 1.0]]
-        
-        self.cam2world = [[-0.9921139840077686, 0.08904293829321579, 0.08821109837397782, -21.91139909478119],
-                           [0.08856900448967851, 0.9960268126638332, -0.009280080734134818, -591.1668141711527],
-                             [-0.08868694481117463, -0.001394128701131917, -0.9960585736919412, 868.9594404819674],
-                               [0.0, 0.0, 0.0, 1.0]]
+        # cam2
+        self.cam2world = [[0.889864038795023, 0.29566284117664476, 0.34745571920284196, -80.34712227727056], 
+                          [0.10471718845940756, -0.873620791536091, 0.47520629524135194, -697.3565207854483], 
+                          [0.4440453838298141, -0.38648440711522647, -0.8083647073915492, 843.5884139467153], 
+                          [0.0, 0.0, 0.0, 1.0]]
         # 拟合3D点集的平面ax+by+cz+d=0
         # 点0到8的拟合平面
         self.plane = [None] * 4  # 平面方程参数 (a, b, c, d)
@@ -161,7 +161,7 @@ class SingleImageProcessor:
         self.depth_masked_image = cv2.bitwise_and(self.depth_image, self.depth_image, mask=mask)
 
     # 绘图函数
-    def draw_workpiece_axes_on_image(self, axis_length=50, show=False, window_name="Workpiece Axes"):
+    def draw_workpiece_axes_on_image(self, axis_length=100, show=False, window_name="Workpiece Axes"):
         """
         在图像上绘制工件坐标系
         参数:
@@ -254,16 +254,17 @@ class SingleImageProcessor:
         if index < 0 or index >= len(self.hand_points):
             raise ValueError(f"索引 {index} 超出范围，必须在 0 到 {len(self.hand_points) - 1} 之间")
         if self.results.multi_hand_landmarks is not None:
+            
             pixel_landmark = self.results.multi_hand_landmarks[0].landmark
             lm = pixel_landmark[index]
             img_width, img_height = self.depth_image.shape[1], self.depth_image.shape[0]
             px = int(lm.x * img_width)
             py = int(lm.y * img_height)
-
+            px = px + 25
             if self.depth_image is not None:
                 #roi = self.depth_image[y1:y2, x1:x2]
-                (px, py) ,roi = DP.find_valid_square((px, py), self.depth_masked_image, img_height, img_width, size=roi_size, step=2, min_ratio=0.8, max_iter=20)
-                print(roi)
+                (px, py) ,roi = DP.find_valid_square((px, py), self.depth_masked_image, img_height, img_width, size=roi_size, step=3, min_ratio=0.8, max_iter=20)
+                #print(roi)
                 valid = roi[roi > 0]
                 if valid.size == 0:
                     print("[WARN] ROI 区域无有效深度值")
@@ -292,7 +293,7 @@ class SingleImageProcessor:
             return
         # 获取第一个手的关键点
         for i in range(len(self.hand_points)):  
-            self.get_hand_point(i)
+            self.get_hand_point(i, 30)
             
 
 
@@ -317,7 +318,7 @@ class SingleImageProcessor:
     def get_from_0_to_8_plane(self):
         '''获取从点0到点8的平面方程'''
         # 选取0到9的非None作为拟合
-        points = np.array([self.hand_points[i] for i in [0, 1, 2, 5, 6, 7, 8] if self.hand_points[i] is not None])
+        points = np.array([self.hand_points[i] for i in [2, 3,4,5] if self.hand_points[i] is not None])
         a, b, c, d = Spmath.fit_plane(points)
         self.plane = [a, b, c, d]
         print(f"平面方程: {a}x + {b}y + {c}z + {d} = 0")
@@ -478,6 +479,7 @@ class SingleImageProcessor:
         depth_norm = np.uint8(depth_norm)
         canvas = cv2.applyColorMap(depth_norm, cv2.COLORMAP_JET)
         for i, (px, py) in enumerate(points):
+            px = px + 25
             if px is not None and py is not None:
                 px, py = self.rgb2depth_pixel((px, py))  # 转换为深度图像的像素坐标
                 cv2.circle(canvas, (px, py), 5, (0, 255, 0), -1)
@@ -493,18 +495,18 @@ class SingleImageProcessor:
 
 
     def run(self):
-        rgb_image_path = "/home/xuan/dianrobot/wjx/eye/get_r/imgs/test.png"
-        depth_image_path = "/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_depth.png"
+        rgb_image_path = "/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_camera_2.png"
+        depth_image_path = "/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_camera_2_depth.png"
         self.load_images(rgb_image_path, depth_image_path)
         self.images_to_results()
         self.get_hand_points_pixel()
         self.draw_depth_mask()
         self.draw_depth_mask_on_image()
+        self.save_hand_points_pixel("/home/xuan/dianrobot/wjx/eye/get_r/imgs/hand_points_pixel.pkl")
         self.draw_and_show_hand_landmarks()
         self.update_all_hand_points()
         self.update_all_axes()
         self.get_tool2world_transformation()
-        # self.save_hand_points_pixel("/home/xuan/dianrobot/wjx/eye/get_r/imgs/hand_points_pixel.pkl")
         self.draw_workpiece_axes_on_image(axis_length=50, show=True, window_name="Workpiece Axes")
         self.get_rxryrz_from_rotation_matrix()
         self.update_gripper_position()
@@ -514,14 +516,4 @@ class SingleImageProcessor:
 if __name__ == "__main__":
     # 示例用法
     processor = SingleImageProcessor()
-    # rgb_image_path = "/home/xuan/dianrobot/test.png"
-    # depth_image_path = "/home/xuan/dianrobot/test_depth.png"
-    # processor.load_images(rgb_image_path, depth_image_path)
-    # processor.images_to_results()
-    # processor.draw_and_show_hand_landmarks()
-    # processor.update_all_axes()
-    # processor.get_tool2world_transformation()
-    # processor.draw_workpiece_axes_on_image(axis_length=50, show=True, window_name="Workpiece Axes")
-    # processor.get_rxryrz_from_rotation_matrix()
-    # processor.update_gripper_position()
     processor.run()

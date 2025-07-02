@@ -134,7 +134,9 @@ class TagTransMatListener(Node):
 
     def camera_callback2(self, rece_tag_trans_mat):
         global tag_trans_mat
+        
         if len(rece_tag_trans_mat.data) == 0:
+            self.tag_trans_mat = []
             return
         tag_trans_mat = list(rece_tag_trans_mat.data)
         tag_trans_mat = [tag_trans_mat[i:i+4] for i in range(0, len(tag_trans_mat), 4)]
@@ -152,7 +154,7 @@ def main(args=None):
     T_tag2camera_list = []
     for i in range(sample_times):
         move_to_pose(robot, get_random_xyz_pos())
-        time.sleep(0.5)
+        time.sleep(2)
         fr5_A_end = fr5_A.robot.GetActualToolFlangePose(0)
         fr5_A_end = fr5_A_end[-6:]
         end2base = get_transform_mat(fr5_A_end[0],fr5_A_end[1],fr5_A_end[2],fr5_A_end[3],fr5_A_end[4],fr5_A_end[5])

@@ -22,8 +22,8 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
 # 读取图片
-img_path = '/home/xuan/dianrobot/wjx/eye/get_r/imgs/test.png'
-depth_img_path = '/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_depth.png'
+img_path = '/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_camera_2.png'
+depth_img_path = '/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_camera_2_depth.png'
 mask_path = '/home/xuan/dianrobot/wjx/eye/get_r/imgs/imgsdepth_mask.png'
 image = cv2.imread(img_path)
 depth_image = cv2.imread(depth_img_path, cv2.IMREAD_UNCHANGED)

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import pickle
 
-def find_valid_square(pt, depth, size=5, step=2, min_ratio=0.5, max_iter=20):
+def find_valid_square(pt, depth, size=10, step=2, min_ratio=0.5, max_iter=20):
     """在depth图上以pt为中心找一个有效深度占比>=min_ratio的正方形区域，否则朝有效率最大方向移动"""
     h, w = depth.shape
     x, y = pt
@@ -42,7 +42,7 @@ def find_valid_square(pt, depth, size=5, step=2, min_ratio=0.5, max_iter=20):
 
 # 读取深度图并伪彩色化
 mask = cv2.imread('/home/xuan/dianrobot/wjx/eye/get_r/imgs/imgsdepth_mask.png', cv2.IMREAD_UNCHANGED)
-depth = cv2.imread('/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_depth.png', cv2.IMREAD_UNCHANGED)
+depth = cv2.imread('/home/xuan/dianrobot/wjx/eye/get_r/imgs/test_camera_2_depth.png', cv2.IMREAD_UNCHANGED)
 depth = cv2.bitwise_and(depth, depth, mask=mask)
 min_depth = 600
 max_depth = 700
@@ -54,8 +54,8 @@ with open('/home/xuan/dianrobot/wjx/eye/get_r/imgs/hand_points_pixel.pkl', 'rb')
     points = pickle.load(f)
 points = points[:9]
 
-size = 5 # 正方形边长
-step = 2   # 步长
+size = 20 # 正方形边长
+step = 5   # 步长
 for pt in points:
     (x, y), roi = find_valid_square(pt, depth, size=size, step=step, min_ratio=0.8)
     # 画正方形
@@ -68,5 +68,6 @@ for pt in points:
     cv2.circle(depth_color, (int(x), int(y)), 2, (0,0,255), -1)
 
 cv2.imshow('Depth with Squares', depth_color)
+cv2.imwrite('/home/xuan/dianrobot/wjx/eye/get_r/imgs/depth_with_squares.png', depth_color)
 cv2.waitKey(0)
 cv2.destroyAllWindows()

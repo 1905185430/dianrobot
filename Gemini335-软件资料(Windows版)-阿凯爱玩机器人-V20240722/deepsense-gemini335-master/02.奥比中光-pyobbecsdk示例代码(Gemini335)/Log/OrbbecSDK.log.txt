@@ -1241,3 +1241,11 @@
 [06/22 22:50:59.222622][error][25877][UsbEnumeratorLibusb.cpp:162] Failed to get string descriptor: error=No such device (it may have been disconnected)
 [06/22 22:50:59.222653][error][25877][UsbEnumeratorLibusb.cpp:162] Failed to get string descriptor: error=No such device (it may have been disconnected)
 [06/22 22:50:59.222683][error][25877][UsbEnumeratorLibusb.cpp:162] Failed to get string descriptor: error=No such device (it may have been disconnected)
+[07/02 10:24:05.797200][error][28774][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 10:24:05.907484][error][28774][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 10:24:42.091029][error][29111][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 10:24:42.191300][error][29111][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 10:27:02.556858][error][29591][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 10:27:02.657158][error][29591][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 10:28:05.459203][error][29999][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 10:28:05.559562][error][29999][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
