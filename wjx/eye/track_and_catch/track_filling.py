@@ -299,7 +299,7 @@ def process_waypoints(waypoints, max_distance=0.3):
     # sparse_points = sparsify_waypoints(waypoints, r=20)
     sparse_points = waypoints.copy()
     # 三维样条插值
-    interp_points = spline_interpolate_6d_path(sparse_points, num_points=10, s=50)
+    interp_points = spline_interpolate_6d_path(sparse_points, num_points=100, s=500)
     
     # 填充路径点
     filled_waypoints = fill_path_points2(interp_points, max_distance=max_distance, max_angle=0.05)
@@ -352,10 +352,10 @@ def visualize_path(original_waypoints, filled_waypoints, title="路径点填充�
     filled_z = [p[2] for p in filled_waypoints]
     
     # 绘制原始路径
-    ax.plot(orig_x, orig_y, orig_z, 'ro-', markersize=8, label='原始路径点')
+    ax.plot(orig_x, orig_y, orig_z, 'ro-', markersize=8, label='original path points')
     
     # 绘制填充后的路径
-    ax.plot(filled_x, filled_y, filled_z, 'b.-', markersize=4, label='填充后路径点')
+    ax.plot(filled_x, filled_y, filled_z, 'b.-', markersize=4, label='filled path points')
     
     ax.set_xlabel('X 坐标')
     ax.set_ylabel('Y 坐标')
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     #aruco_file = "/home/hn/One-shot-imitation-in-chemistry-lab-main/eye/object_world_positions.txt"
     #aruco_file = "/home/xuan/dianrobot/wjx/eye/hand_positions.txt"
     #csv_file = "/home/xuan/dianrobot/wjx/eye/hand_positions.csv"
-    csv_file = "/home/xuan/dianrobot/wjx/eye/hand_obs.csv"
+    csv_file = "/home/xuan/dianrobot/wjx/eye/track_and_catch/gripper_positions.csv"
     # 读取原始路径点
     #original_waypoints = parse_aruco_file(csv_file)
     #original_waypoints = read_xyz_from_csv(csv_file)

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # 读取深度图（假设为16位单通道PNG）
-depth = cv2.imread('wjx/eye/get_r/imgs/test_depth.png', cv2.IMREAD_UNCHANGED)
+depth = cv2.imread('/home/xuan/dianrobot/wjx/eye/get_photos/data2/depth/depth001_2.png', cv2.IMREAD_UNCHANGED)
 if depth is None:
     raise FileNotFoundError("未找到 test_depth.png 文件")
 

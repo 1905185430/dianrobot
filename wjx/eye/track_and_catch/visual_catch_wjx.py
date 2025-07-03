@@ -2,17 +2,13 @@ import time
 import json
 import numpy as np
 import cv2
-import rospy
+# import rospy
 from std_msgs.msg import Float32MultiArray, String
 # 阿凯机器人工具箱
 # - Gemini335类
 # from kyle_robot_toolbox.camera import Gemini335
 # from kyle_robot_toolbox.opencv import ArucoTag
 # from kyle_robot_toolbox.open3d import *
-# ArucoTag可视化窗口
-from arucotag_visualizer import ArucoTagVisualizer
-# ArucoTag姿态矫正器
-from arucotag_pose_adjust import *
 from fairino import Robot
 
 #水平角度抓取
@@ -109,10 +105,10 @@ class PathPlayer:
         robot.MoveGripper(1, 70, 50, 30, 10000, 1)
         # 确保机器人准备就绪
         time.sleep(3)
-        # ret = self.robot.ServoMoveStart()
-        # if ret != 0:
-        #     print(f"启动伺服模式失败，错误码: {ret}")
-        #     return False
+        ret = self.robot.ServoMoveStart()
+        if ret != 0:
+            print(f"启动伺服模式失败，错误码: {ret}")
+            return False
         
         success = True
         try:
@@ -139,6 +135,10 @@ class PathPlayer:
         finally:
             # 关闭伺服模式
             # self.robot.ServoMoveEnd()
+            end1 = np.array(self.waypoints[-1])
+            end1[3] = 90
+            end1[4] = 0
+            robot.MoveCart([0, -380, 200, 90, 0, 0], 0, 0, vel=20, acc=20)
             robot.MoveGripper(1, 100, 50, 30, 10000, 1)
             end_pos = np.array(self.waypoints[-1]) + np.array([0, 50, 0, 0, 0, 0])
             robot.MoveCart(end_pos, 0, 0, vel=20, acc=20)
@@ -169,7 +169,7 @@ class PathPlayer:
             print(f"开始执行路径，共 {len(self.waypoints)} 个点")
             input("按回车键开始执行路径...")
             # 加偏置
-            self.waypoints = np.array(self.waypoints) + np.array([0, 135, -20, 0, 0, 0])  # 将所有点的姿态归一化为朝下的姿态
+            self.waypoints = np.array(self.waypoints) + np.array([0, 135, 100, 0, 0, 0])  # 将所有点的姿态归一化为朝下的姿态
             # 打开夹爪
             robot.MoveGripper(1, 100, 50, 30, 10000, 1)
             # 机械臂移动到初始位置
@@ -184,19 +184,20 @@ class PathPlayer:
             robot.MoveGripper(1, 70, 50, 30, 10000, 1)
             # 确保机器人准备就绪
             time.sleep(3)
-            # ret = self.robot.ServoMoveStart()
-            # if ret != 0:
-            #     print(f"启动伺服模式失败，错误码: {ret}")
-            #     return False
+            ret = self.robot.ServoMoveStart()
+            if ret != 0:
+                print(f"启动伺服模式失败，错误码: {ret}")
+                return False
             
             success = True
             try:
                 # 遍历所有路径点
                 for i, point in enumerate(self.waypoints):
                     #print(f"执行第 {i+1}/{len(self.waypoints)} 个点: {point}")
-                    
+                    if i != 0 and i % 200 == 0:
+                        time.sleep(1)
                     time.sleep(0.001)  # 暂停一段时间
-                    ret = self.robot.ServoCart(0, point, cmdT = 0.008)
+                    ret = self.robot.ServoCart(0, point, cmdT = 0.01)
                     #input(f"移动到点 {i+1}，按回车继续...")
             
                     if ret != 0:
@@ -213,17 +214,19 @@ class PathPlayer:
             
             finally:
                 # 关闭伺服模式
-                # self.robot.ServoMoveEnd()
+                self.robot.ServoMoveEnd()
                 robot.MoveGripper(1, 100, 50, 30, 10000, 1)
                 end_pos = np.array(self.waypoints[-1]) + np.array([0, 50, 0, 0, 0, 0])
                 robot.MoveCart(end_pos, 0, 0, vel=20, acc=20)
-            
+                robot.MoveGripper(1, 100, 50, 30, 10000, 1)
+                end = np.array(self.waypoints[-1]) + np.array([0, 100, 0, 0, 0, 0])
+                self.robot.MoveCart(end, 0, 0, vel=20, acc=20)
             return success
 
     
 if __name__ == "__main__":
-    #robot = Robot.RPC('192.168.59.6')
-    robot = Robot.RPC('192.168.58.6')
+    robot = Robot.RPC('192.168.59.6')
+    # robot = Robot.RPC('192.168.58.6')
     robot.ActGripper(1,0)
     time.sleep(1)
     robot.ActGripper(1,1)
@@ -235,6 +238,8 @@ if __name__ == "__main__":
     PathPlayer0.play_path_2(velocity=20, blend_radius=0, pause_time=0.008)
     time.sleep(2)
     # 机械臂移动到初始位置
+    robot.MoveGripper(1, 100, 50, 30, 10000, 1)
+
     robot.MoveCart([0, -380, 200, 90, 0, 0], 0, 0, vel=20, acc=20)
     
 

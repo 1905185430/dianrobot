@@ -40,9 +40,9 @@ fr5_A = []
 robot = Robot.RPC('192.168.58.6')  # 替换为实际的机器人IP地址
 
 def get_random_xyz_pos():
-    x = random.uniform(-300, 350)
+    x = random.uniform(-280, 310)
     y = random.uniform(-680, -350)
-    z = random.uniform(200, 350)    
+    z = random.uniform(100, 250)    
     rx = random.uniform(80, 120)
     ry = random.uniform(-30, 30)
     rz = random.uniform(-30, 30)

@@ -3937,3 +3937,7 @@
 [06/15 16:17:07.328186][debug][6259][DeviceManager.cpp:52] DeviceManager construct done!
 [07/02 10:06:31.248261][error][17893][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
 [07/02 10:06:31.364862][error][17893][ObLibuvcDevicePort.cpp:279] setXu failed, error code=-4
+[07/02 17:28:39.427499][error][88992][UsbEnumeratorLibusb.cpp:162] Failed to get string descriptor: error=No such device (it may have been disconnected)
+[07/02 17:28:39.427634][error][88992][UsbEnumeratorLibusb.cpp:162] Failed to get string descriptor: error=No such device (it may have been disconnected)
+[07/02 17:28:39.427657][error][88992][UsbEnumeratorLibusb.cpp:162] Failed to get string descriptor: error=No such device (it may have been disconnected)
+[07/02 17:28:39.427675][error][88992][UsbEnumeratorLibusb.cpp:162] Failed to get string descriptor: error=No such device (it may have been disconnected)
